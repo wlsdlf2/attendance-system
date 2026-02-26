@@ -90,8 +90,17 @@ src/
 |------|------|------|
 | id | UUID PK | Supabase auth.uid()와 동일 |
 | email | TEXT NOT NULL UNIQUE | 로그인 이메일 |
-| role | TEXT NOT NULL DEFAULT 'staff' | 'admin' 또는 'staff' |
+| name | TEXT | 표시 이름 |
+| role | TEXT NOT NULL DEFAULT 'staff' | 'owner' / 'admin' / 'staff' |
+| approved | BOOLEAN NOT NULL DEFAULT false | staff만 사용. true일 때만 대시보드 이용 |
 | created_at | TIMESTAMPTZ DEFAULT NOW() | 가입일시 |
+
+- 비밀번호는 Supabase Auth(auth.users)에서 관리하므로 이 테이블에는 두지 않음.
+
+**권한 체계**
+- **owner (서비스 관리자)**: 본인. 모든 데이터(출석·명단·방문자·계정) 관리, users 테이블 전체 권한.
+- **admin (목사님)**: 사용자 중 최고 권한. 다른 사용자(임원/목회자) 가입 수락 가능. 대시보드 데이터 관리.
+- **staff (임원/목회자)**: 회원가입 후 목사님이 수락(approved=true)하면 대시보드 이용. 가입 수락 권한 없음.
 
 ---
 
@@ -144,8 +153,8 @@ VITE_SUPABASE_ANON_KEY=...
 
 ## 개발 단계 (Phase)
 - **Phase 1**: 기반 세팅 ✅ 완료
-- **Phase 2**: 출석체크 화면 (`/checkin`) ← 현재 단계
-- **Phase 3**: 대시보드 기본 (로그인, 주일별 현황, 청년 명단 CRUD)
+- **Phase 2**: 출석체크 화면 (`/checkin`) ✅ 완료
+- **Phase 3**: 대시보드 기본 (로그인 ✅, 주일별 현황, 청년 명단 CRUD) ← 현재 단계
 - **Phase 4**: 심화 기능 (개인 이력, 통계 그래프, 결석자 알림)
 - **Phase 5**: Excel/CSV export, UI 다듬기, 실사용 테스트
 
