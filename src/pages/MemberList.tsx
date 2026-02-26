@@ -37,7 +37,8 @@ export default function MemberList() {
     const { data, error: err } = await supabase
       .from('members')
       .select('id, name, phone, birth_date, is_new_member, memo, created_at')
-      .order('name')
+      .order('birth_date', { ascending: true, nullsFirst: false })
+      .order('name', { ascending: true })
     if (err) {
       setError(err.message)
       setList([])
