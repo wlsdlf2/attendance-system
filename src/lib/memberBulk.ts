@@ -16,9 +16,16 @@ export function downloadMemberTemplate(): void {
   const wsData: string[][] = [
     [...TEMPLATE_HEADERS],
     ['홍길동', '010-1234-5678', '1995-01-15', 'Y', ''],
-    ['김영희', '010-9876-5432', '1998-06-01', 'N', '등반완료'],
+    ['김영희', '010-1111-2222', '1998-06-01', 'N', ''],
   ]
   const ws = XLSX.utils.aoa_to_sheet(wsData)
+  ws['!cols'] = [
+    { wch: 10 },
+    { wch: 18 },
+    { wch: 12 },
+    { wch: 8 },
+    { wch: 15 },
+  ]
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, TEMPLATE_SHEET_NAME)
   XLSX.writeFile(wb, '청년명단_일괄등록_양식.xlsx')

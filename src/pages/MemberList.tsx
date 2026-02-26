@@ -110,6 +110,12 @@ export default function MemberList() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+    if (ext !== '.xlsx' && ext !== '.xls') {
+      setError('엑셀 파일(.xlsx, .xls)만 업로드할 수 있습니다.')
+      e.target.value = ''
+      return
+    }
     setUploading(true)
     setUploadResult(null)
     setError(null)
