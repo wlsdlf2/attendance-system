@@ -163,7 +163,12 @@ export default function AttendanceGrid() {
                     key={d}
                     className="p-2 text-center border-b border-slate-200 min-w-[2.5rem] font-medium text-slate-700"
                   >
-                    {formatDateCol(d)}
+                    <Link
+                      to={`/dashboard/attendance/${d}`}
+                      className="block text-primary hover:text-primary-dark hover:underline"
+                    >
+                      {formatDateCol(d)}
+                    </Link>
                   </th>
                 ))}
               </tr>
