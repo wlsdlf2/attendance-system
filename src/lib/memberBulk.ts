@@ -37,8 +37,13 @@ function normalizePhone(v: unknown): string {
   return s
 }
 
+/** 엑셀 시리얼 날짜(숫자) 또는 문자열을 YYYY-MM-DD로 변환 */
 function normalizeDate(v: unknown): string | null {
   if (v == null) return null
+  if (typeof v === 'number' && v > 0) {
+    const d = new Date((v - 25569) * 86400 * 1000)
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  }
   const s = String(v).trim()
   if (!s) return null
   const d = new Date(s)

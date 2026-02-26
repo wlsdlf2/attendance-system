@@ -125,13 +125,14 @@ export default function MemberList() {
       let success = 0
       let fail = 0
       for (const row of rows) {
-        const { error: err } = await supabase.from('members').insert({
-          name: row.name,
-          phone: row.phone,
-          birth_date: row.birth_date,
-          is_new_member: row.is_new_member,
-          memo: row.memo,
-        })
+        const payload = {
+          name: row.name.trim(),
+          phone: row.phone.trim(),
+          birth_date: row.birth_date || null,
+          is_new_member: Boolean(row.is_new_member),
+          memo: row.memo?.trim() || null,
+        }
+        const { error: err } = await supabase.from('members').insert(payload)
         if (err) {
           fail += 1
           if (err.code === '23505') errors.push(`전화번호 중복: ${row.name}(${row.phone})`)
