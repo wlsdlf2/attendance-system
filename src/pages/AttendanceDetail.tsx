@@ -61,7 +61,7 @@ export default function AttendanceDetail() {
           return
         }
 
-        setAttendances((attData ?? []) as AttendanceRow[])
+        setAttendances((attData ?? []) as unknown as AttendanceRow[])
         setVisitorCount(count ?? 0)
       } catch {
         setError('데이터를 불러오지 못했습니다.')
@@ -119,7 +119,7 @@ export default function AttendanceDetail() {
           <p className="text-slate-500 text-sm">출석한 청년이 없습니다.</p>
         ) : (
           <ul className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-            {attendances.map((a, i) => (
+            {attendances.map((a) => (
               <li
                 key={a.id}
                 className="px-4 py-3 flex flex-wrap items-center justify-between gap-2"

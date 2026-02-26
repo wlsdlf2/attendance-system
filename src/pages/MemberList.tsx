@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { downloadMemberTemplate, parseMemberFile } from '../lib/memberBulk'
 
 type Member = {
   id: string
@@ -26,6 +27,9 @@ export default function MemberList() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const [uploading, setUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<{ success: number; fail: number; errors: string[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = async () => {
     setLoading(true)
@@ -103,6 +107,43 @@ export default function MemberList() {
     }
   }
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadResult(null)
+    setError(null)
+    try {
+      const { rows, errors: parseErrors } = await parseMemberFile(file)
+      const errors = [...parseErrors]
+      let success = 0
+      let fail = 0
+      for (const row of rows) {
+        const { error: err } = await supabase.from('members').insert({
+          name: row.name,
+          phone: row.phone,
+          birth_date: row.birth_date,
+          is_new_member: row.is_new_member,
+          memo: row.memo,
+        })
+        if (err) {
+          fail += 1
+          if (err.code === '23505') errors.push(`전화번호 중복: ${row.name}(${row.phone})`)
+          else errors.push(`${row.name}: ${err.message}`)
+        } else {
+          success += 1
+        }
+      }
+      setUploadResult({ success, fail, errors })
+      if (success > 0) load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '업로드 처리 중 오류가 발생했습니다.')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const remove = async (id: string, name: string) => {
     if (!confirm(`"${name}" 청년을 명단에서 삭제할까요?`)) return
     const { error: err } = await supabase.from('members').delete().eq('id', id)
@@ -137,6 +178,53 @@ export default function MemberList() {
       {error && (
         <p className="text-red-600 bg-red-50 rounded-lg p-3 mb-4">{error}</p>
       )}
+
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm">
+        <h3 className="font-medium text-slate-800 mb-2">일괄 등록</h3>
+        <p className="text-slate-600 text-sm mb-3">
+          양식을 다운로드해 정보를 입력한 뒤 엑셀 파일을 업로드하면 한 번에 등록됩니다.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => downloadMemberTemplate()}
+            className="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50"
+          >
+            양식 다운로드
+          </button>
+          <label className="px-3 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark cursor-pointer">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+            {uploading ? '업로드 중…' : '엑셀 파일 업로드'}
+          </label>
+        </div>
+        {uploadResult && (
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <p className="text-sm text-slate-700">
+              <strong className="text-primary">{uploadResult.success}명</strong> 등록됨
+              {uploadResult.fail > 0 && (
+                <> · <strong className="text-red-600">{uploadResult.fail}건</strong> 실패</>
+              )}
+            </p>
+            {uploadResult.errors.length > 0 && (
+              <ul className="mt-2 text-xs text-red-600 max-h-32 overflow-y-auto space-y-0.5">
+                {uploadResult.errors.slice(0, 10).map((msg, i) => (
+                  <li key={i}>{msg}</li>
+                ))}
+                {uploadResult.errors.length > 10 && (
+                  <li>외 {uploadResult.errors.length - 10}건</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
       {(adding || editingId) && (
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 shadow-sm">

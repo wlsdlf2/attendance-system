@@ -60,7 +60,7 @@ export default function AttendanceList() {
 
         const byDate = new Map<string, DateSummary>()
 
-        const attList = (attendances ?? []) as Array<{
+        const attList = (attendances ?? []) as unknown as Array<{
           id: string
           date: string
           created_at: string
